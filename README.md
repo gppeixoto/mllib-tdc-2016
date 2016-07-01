@@ -1,1 +1,3 @@
-# mllib-tdc-2016 git init git add README.md git commit -m first commit git remote add origin git@github.com:gppeixoto/mllib-tdc-2016.git git push -u origin master
+# TDC 2016 - MLLib Presentation Code
+### Guilherme Peixoto - Data Science Engineer Intern @ In Loco Media
+### guilherme.peixoto@inlocomedia.com
