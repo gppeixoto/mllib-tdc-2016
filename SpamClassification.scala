@@ -1,5 +1,8 @@
+package com.inlocomedia.sparkjobs.tdc
+
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
@@ -16,8 +19,6 @@ object SpamClassification {
     val sc = new SparkContext(new SparkConf())
     val sqlContext = new SQLContext(sc)
 
-    // Dataset available at:
-    // https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection
     val dataRDD:RDD[(Long, String, Double)] = sc
       .textFile("./input/SMSSpamCollection")
       .zipWithIndex
@@ -44,12 +45,13 @@ object SpamClassification {
       .setStages(Array(tokenizer, hashingTF, estimator))
     val model = pipeline.fit(trainingDF)
 
-    val accuracy = 1.0 * model.transform(testDF)
-      .filter("prediction = label")
-      .count / testDF.count
-
-    println("Accuracy: %.3f on %d training samples and %d test samples"
-      .format(accuracy, trainingDF.count, testDF.count)
+    val predictions = model.transform(testDF)
+    val accuracy = 1.0 * predictions.filter("prediction = label").count / testDF.count
+    val areaUnderROC = new BinaryClassificationEvaluator()
+      .setLabelCol("label")
+      .evaluate(predictions)
+    println("ROC: %.3f, Accuracy: %.3f on %d training samples and %d test samples"
+      .format(areaUnderROC, accuracy, trainingDF.count, testDF.count)
     )
   }
 }
