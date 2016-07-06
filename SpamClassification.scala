@@ -4,6 +4,7 @@ import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
@@ -43,7 +44,13 @@ object SpamClassification {
     val estimator = new LogisticRegression()
     val pipeline = new Pipeline()
       .setStages(Array(tokenizer, hashingTF, estimator))
-    val model = pipeline.fit(trainingDF)
+    val paramMap = ParamMap.empty
+      .put(estimator.maxIter -> 5, estimator.threshold -> .5)
+      .put(estimator.maxIter -> 5, estimator.threshold -> .65)
+      .put(estimator.maxIter -> 10, estimator.threshold -> .5)
+      .put(estimator.maxIter -> 10, estimator.threshold -> .65)
+
+    val model = pipeline.fit(trainingDF, paramMap)
 
     val predictions = model.transform(testDF)
     val accuracy = 1.0 * predictions.filter("prediction = label").count / testDF.count
