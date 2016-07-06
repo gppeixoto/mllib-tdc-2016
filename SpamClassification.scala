@@ -1,6 +1,6 @@
 package com.inlocomedia.sparkjobs.tdc
 
-import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
@@ -15,6 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object SpamClassification {
   val SPAM = "spam"
   val HAM = "ham"
+  val TMP_DIR = "./tmp-model/"
 
   def main(args: Array[String]) {
     val sc = new SparkContext(new SparkConf())
@@ -51,8 +52,10 @@ object SpamClassification {
       .put(estimator.maxIter -> 10, estimator.threshold -> .65)
 
     val model = pipeline.fit(trainingDF, paramMap)
+    model.save(TMP_DIR)
 
-    val predictions = model.transform(testDF)
+    val loadModel = PipelineModel.load(TMP_DIR)
+    val predictions = loadModel.transform(testDF)
     val accuracy = 1.0 * predictions.filter("prediction = label").count / testDF.count
     val areaUnderROC = new BinaryClassificationEvaluator()
       .setLabelCol("label")
